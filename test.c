@@ -74,7 +74,13 @@ void simple()
 
 int main()
 {
-   bigger();
-   simple();
+   if (0)
+   {
+       bigger();
+       simple();
+   }
+   union tag *tag = find("xs"); 
+   dump(tag, "mxs", &mxs);
+
    return 0;
 }

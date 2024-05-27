@@ -338,3 +338,8 @@ union tag *find(char *name)
    }
    return 0;
 }
+
+void dump(union tag *tag, char *name, void *p)
+{
+   ((struct tag_base *)tag)->op->visit(name, tag, 0, (unsigned char *)p);
+}

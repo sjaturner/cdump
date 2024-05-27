@@ -212,6 +212,7 @@ union tag
 };
 
 union tag *find(char *name);
+void dump(union tag *tag, char *name, void *p);
 
 extern struct taglim taglim;
 

@@ -1,6 +1,5 @@
 CC=gcc
 CFLAGS=-g -Wall
-test.o:test.c
 test.objdump:test.o
 	objdump --dwarf test.o > test.objdump
 parse: parse.c
