@@ -6,7 +6,7 @@
 #include "tags.h"
 
 #define BOILERPLATE(X) \
-void visit_ ## X(char *name, struct taglim *taglim, union tag *tag, struct link *link, unsigned char *p) \
+void visit_ ## X(char *name, union tag *tag, struct link *link, unsigned char *p) \
 { \
    assert(0); \
 } \
@@ -97,20 +97,20 @@ void indent_printf(struct link *link, const char *fmt, ...)
    va_end(ap);
 }
 
-void visit_array_type(char *name, struct taglim *taglim, union tag *tag, struct link *prev, unsigned char *p)
+void visit_array_type(char *name, union tag *tag, struct link *prev, unsigned char *p)
 {
    struct link link = make_link(tag, prev, &link);
    struct tag_array_type *tag_array_type = (struct tag_array_type *)tag;
    union tag *scan = tag;
    struct tag_subrange_type *tag_subrange_type = 0;
-   union tag *next = taglim->base + tag_array_type->type;
+   union tag *next = taglim.base + tag_array_type->type;
 
    printf("= {\n");
 
    do
    {
       ++scan;
-      assert(scan < taglim->base + taglim->nelem);
+      assert(scan < taglim.base + taglim.nelem);
    }
    while(!((struct tag_base *)scan)->op);
 
@@ -122,7 +122,7 @@ void visit_array_type(char *name, struct taglim *taglim, union tag *tag, struct 
    {
       indent_printf(&link, ".[%d] ", link.val);
 
-      ((struct tag_base *)next)->op->visit(name, taglim, next, &link, p + link.val * ((struct tag_base *)next)->byte_size);
+      ((struct tag_base *)next)->op->visit(name, next, &link, p + link.val * ((struct tag_base *)next)->byte_size);
    }
 
    indent_printf(prev, "}\n");
@@ -133,17 +133,17 @@ struct op op_array_type = {
    "array_type",
 };
 
-void visit_pointer_type(char *name, struct taglim *taglim, union tag *tag, struct link *prev, unsigned char *p)
+void visit_pointer_type(char *name, union tag *tag, struct link *prev, unsigned char *p)
 {
    struct link link = make_link(tag, prev, &link);
    struct tag_pointer_type *tag_pointer_type = (struct tag_pointer_type *)tag;
-   union tag *next = taglim->base + tag_pointer_type->type;
+   union tag *next = taglim.base + tag_pointer_type->type;
 
    if(p && *p)
    {
       printf("->");
 
-      ((struct tag_base *)next)->op->visit(name, taglim, next, &link, *(unsigned char **)p);
+      ((struct tag_base *)next)->op->visit(name, next, &link, *(unsigned char **)p);
    }
    else
    {
@@ -156,7 +156,7 @@ struct op op_pointer_type = {
    "pointer_type",
 };
 
-void visit_struct_type(char *name, struct taglim *taglim, union tag *tag, struct link *prev, unsigned char *p)
+void visit_struct_type(char *name, union tag *tag, struct link *prev, unsigned char *p)
 {
    struct link link = make_link(tag, prev, &link);
    union tag *scan = tag;
@@ -168,18 +168,18 @@ void visit_struct_type(char *name, struct taglim *taglim, union tag *tag, struct
       do
       {
          ++scan;
-         assert(scan < taglim->base + taglim->nelem);
+         assert(scan < taglim.base + taglim.nelem);
       }
       while(!((struct tag_base *)scan)->op);
 
       if(((struct tag_base *)scan)->op == &op_member)
       {
          struct tag_member *tag_member = (struct tag_member *)scan;
-         union tag *next = taglim->base + tag_member->type;
+         union tag *next = taglim.base + tag_member->type;
 
          indent_printf(&link, ".%s ", tag_member->tag_base.name);
          link.member = scan;
-         ((struct tag_base *)next)->op->visit(name, taglim, next, &link, p + tag_member->data_member_location);
+         ((struct tag_base *)next)->op->visit(name, next, &link, p + tag_member->data_member_location);
       }
       else
       {
@@ -194,13 +194,13 @@ struct op op_structure_type = {
    "struct_type",
 };
 
-void visit_typedef(char *name, struct taglim *taglim, union tag *tag, struct link *prev, unsigned char *p)
+void visit_typedef(char *name, union tag *tag, struct link *prev, unsigned char *p)
 {
    struct link link = make_link(tag, prev, &link);
    struct tag_typedef *tag_typedef = (struct tag_typedef *)tag;
-   union tag *next = taglim->base + tag_typedef->type;
+   union tag *next = taglim.base + tag_typedef->type;
 
-   ((struct tag_base *)next)->op->visit(name, taglim, next, &link, p);
+   ((struct tag_base *)next)->op->visit(name, next, &link, p);
 }
 
 struct op op_typedef = {
@@ -208,14 +208,14 @@ struct op op_typedef = {
    "typedef",
 };
 
-void visit_variable(char *name, struct taglim *taglim, union tag *tag, struct link *prev, unsigned char *p)
+void visit_variable(char *name, union tag *tag, struct link *prev, unsigned char *p)
 {
    struct link link = make_link(tag, prev, &link);
    struct tag_variable *tag_variable = (struct tag_variable *)tag;
-   union tag *next = taglim->base + tag_variable->type;
+   union tag *next = taglim.base + tag_variable->type;
 
    indent_printf(&link, "%s ", name);
-   ((struct tag_base *)next)->op->visit(name, taglim, next, &link, p);
+   ((struct tag_base *)next)->op->visit(name, next, &link, p);
 }
 
 struct op op_variable = {
@@ -266,7 +266,7 @@ RENDER1(render_float, float, "= %f\n");
 RENDER1(render_double, double, "= %lf\n");
 RENDER1(render_long_double, long double, "= %Lf\n");
 
-void visit_base_type(char *name, struct taglim *taglim, union tag *tag, struct link *prev, unsigned char *p)
+void visit_base_type(char *name, union tag *tag, struct link *prev, unsigned char *p)
 {
    struct link link = make_link(tag, prev, &link);
    struct tag_base *tag_base = (struct tag_base *)tag;
@@ -326,11 +326,11 @@ struct op op_base_type = {
    "base_type",
 };
 
-union tag *find(struct taglim *taglim, char *name)
+union tag *find(char *name)
 {
-   for(int i = 0; i < taglim->nelem; ++i)
+   for(int i = 0; i < taglim.nelem; ++i)
    {
-      struct tag_base *tag_base = (struct tag_base *)(taglim->base + i);
+      struct tag_base *tag_base = (struct tag_base *)(taglim.base + i);
       if(tag_base && tag_base->name && !strcmp(tag_base->name, name))
       {
          return tags + i;
