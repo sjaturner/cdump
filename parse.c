@@ -160,9 +160,7 @@ int parse_line(char *line)
             },
         };
 
-        int i = 0;
-
-        for (i = 0; i < sizeof(fmts) / sizeof(fmts[0]); ++i) {
+        for (unsigned int i = 0; i < sizeof(fmts) / sizeof(fmts[0]); ++i) {
             unsigned int u = 0;
             unsigned int val = 0;
             char *ifmt = fmts[i].ifmt;
@@ -190,9 +188,8 @@ int parse_line(char *line)
             " <%x> DW_AT_comp_dir : (indirect string, offset: 0x%x): %[^\n]",
             " <%x> DW_AT_name : (indirect string, offset: 0x%x): %[^\n]",
         };
-        int i = 0;
 
-        for (i = 0; i < sizeof(fmts) / sizeof(fmts[0]); ++i) {
+        for (unsigned int i = 0; i < sizeof(fmts) / sizeof(fmts[0]); ++i) {
             char *fmt = fmts[i];
 
             if (3 == sscanf(line, fmt, &u0, &u1, buf)) {
@@ -259,7 +256,6 @@ int main()
             continue;
         } else {
             int found = 0;
-            int i = 0;
             char *ignore[] = {
                 "DW_AT_language",
                 "DW_AT_location",
@@ -267,7 +263,7 @@ int main()
                 "DW_AT_frame_base",
             };
 
-            for (i = 0; i < sizeof(ignore) / sizeof(ignore[0]); ++i) {
+            for (unsigned int i = 0; i < sizeof(ignore) / sizeof(ignore[0]); ++i) {
                 if (strstr(line, ignore[i])) {
                     found = 1;
                     break;
