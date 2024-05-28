@@ -41,11 +41,13 @@ void bigger()
     float pi = 3.14;
     uint32_t ui = 23;
 
+#if 0
     DWARF(mxs);
     DWARF(array);
     DWARF(bar);
     DWARF(pi);
     DWARF(ui);
+#endif
 }
 
 void simple()
@@ -66,7 +68,9 @@ void simple()
         .p = &aa,
     };
 
+#if 0
     DWARF(bb);
+#endif
 }
 
 int main()

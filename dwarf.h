@@ -13,7 +13,7 @@ struct taglim {
 };
 
 struct op {
-    void (*visit)(char *name, union tag *tag, struct link *link, unsigned char *p);
+    void (*visit)(char *name, union tag *tag, struct link *link, unsigned char *p, int more);
     char *name;
 };
 
@@ -192,15 +192,4 @@ union tag *find(char *name);
 void dump(union tag *tag, char *name, void *p);
 
 extern struct taglim taglim;
-
-#define PASTE(x, y) x##_##y
-#define EVAL(x, y) PASTE(x, y)
-#define NAME(fun) EVAL(fun, __LINE__)
-#define DWARF(THING)                                                                       \
-    {                                                                                      \
-        typeof(THING) *NAME(debug) = &THING;                                               \
-        union tag *tag = find(#THING);                                                     \
-        ((struct tag_base *)tag)->op->visit(#THING, tag, 0, (unsigned char *)NAME(debug)); \
-    }
-
 #endif

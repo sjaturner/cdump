@@ -5,14 +5,14 @@
 #include "dwarf.h"
 #include "tags.h"
 
-#define BOILERPLATE(X)                                                              \
-    void visit_##X(char *name, union tag *tag, struct link *link, unsigned char *p) \
-    {                                                                               \
-        assert(0);                                                                  \
-    }                                                                               \
-                                                                                    \
-    struct op op_##X = {                                                            \
-        visit_##X,                                                                  \
+#define BOILERPLATE(X)                                                                        \
+    void visit_##X(char *name, union tag *tag, struct link *link, unsigned char *p, int more) \
+    {                                                                                         \
+        assert(0);                                                                            \
+    }                                                                                         \
+                                                                                              \
+    struct op op_##X = {                                                                      \
+        visit_##X,                                                                            \
     };
 
 BOILERPLATE(compile_unit);
@@ -37,7 +37,7 @@ struct link make_link(union tag *tag, struct link *prev)
     return link;
 }
 
-void visit_array_type(char *name, union tag *tag, struct link *prev, unsigned char *p)
+void visit_array_type(char *name, union tag *tag, struct link *prev, unsigned char *p, int more)
 {
     struct link link = make_link(tag, prev);
     struct tag_array_type *tag_array_type = (struct tag_array_type *)tag;
@@ -57,10 +57,10 @@ void visit_array_type(char *name, union tag *tag, struct link *prev, unsigned ch
     tag_subrange_type = (struct tag_subrange_type *)scan;
 
     for (link.val = 0; link.val <= tag_subrange_type->upper_bound; ++link.val) {
-        ((struct tag_base *)next)->op->visit(name, next, &link, p + link.val * ((struct tag_base *)next)->byte_size);
+        ((struct tag_base *)next)->op->visit(name, next, &link, p + link.val * ((struct tag_base *)next)->byte_size, link.val != tag_subrange_type->upper_bound);
     }
 
-    printf("],");
+    printf("]%s", more ? "," : "");
 }
 
 struct op op_array_type = {
@@ -68,16 +68,16 @@ struct op op_array_type = {
     "array_type",
 };
 
-void visit_pointer_type(char *name, union tag *tag, struct link *prev, unsigned char *p)
+void visit_pointer_type(char *name, union tag *tag, struct link *prev, unsigned char *p, int more)
 {
     struct link link = make_link(tag, prev);
     struct tag_pointer_type *tag_pointer_type = (struct tag_pointer_type *)tag;
     union tag *next = taglim.base + tag_pointer_type->type;
 
     if (p && *p) {
-        ((struct tag_base *)next)->op->visit(name, next, &link, *(unsigned char **)p);
+        ((struct tag_base *)next)->op->visit(name, next, &link, *(unsigned char **)p, more);
     } else {
-        printf("null,");
+        printf("null%s", more ? "," : "");
     }
 }
 
@@ -86,14 +86,28 @@ struct op op_pointer_type = {
     "pointer_type",
 };
 
-void visit_struct_type(char *name, union tag *tag, struct link *prev, unsigned char *p)
+void visit_struct_type(char *name, union tag *tag, struct link *prev, unsigned char *p, int more)
 {
     struct link link = make_link(tag, prev);
-    union tag *scan = tag;
+    union tag *scan = 0;
+    unsigned int count = 0;
 
     printf("{");
 
-    for (;;) {
+    for (scan = tag;;) {
+        do {
+            ++scan;
+            assert(scan < taglim.base + taglim.nelem);
+        } while (!((struct tag_base *)scan)->op);
+
+        if (((struct tag_base *)scan)->op == &op_member) {
+            ++count;
+        } else {
+            break;
+        }
+    }
+
+    for (scan = tag;;) {
         do {
             ++scan;
             assert(scan < taglim.base + taglim.nelem);
@@ -105,12 +119,12 @@ void visit_struct_type(char *name, union tag *tag, struct link *prev, unsigned c
 
             printf("\"%s\":", tag_member->tag_base.name);
             link.member = scan;
-            ((struct tag_base *)next)->op->visit(name, next, &link, p + tag_member->data_member_location);
+            ((struct tag_base *)next)->op->visit(name, next, &link, p + tag_member->data_member_location, !!--count);
         } else {
             break;
         }
     }
-    printf("},");
+    printf("}%s", more ? "," : "");
 }
 
 struct op op_structure_type = {
@@ -118,13 +132,13 @@ struct op op_structure_type = {
     "struct_type",
 };
 
-void visit_typedef(char *name, union tag *tag, struct link *prev, unsigned char *p)
+void visit_typedef(char *name, union tag *tag, struct link *prev, unsigned char *p, int more)
 {
     struct link link = make_link(tag, prev);
     struct tag_typedef *tag_typedef = (struct tag_typedef *)tag;
     union tag *next = taglim.base + tag_typedef->type;
 
-    ((struct tag_base *)next)->op->visit(name, next, &link, p);
+    ((struct tag_base *)next)->op->visit(name, next, &link, p, more);
 }
 
 struct op op_typedef = {
@@ -132,61 +146,61 @@ struct op op_typedef = {
     "typedef",
 };
 
-void visit_variable(char *name, union tag *tag, struct link *prev, unsigned char *p)
+void visit_variable(char *name, union tag *tag, struct link *prev, unsigned char *p, int more)
 {
     struct link link = make_link(tag, prev);
     struct tag_variable *tag_variable = (struct tag_variable *)tag;
     union tag *next = taglim.base + tag_variable->type;
 
     printf("\"%s\":", name);
-    ((struct tag_base *)next)->op->visit(name, next, &link, p);
+    ((struct tag_base *)next)->op->visit(name, next, &link, p, 1);
 }
 
 struct op op_variable = {
     visit_variable,
 };
 
-void render_char(unsigned char *p, struct link *link)
+void render_char(unsigned char *p, struct link *link, int more)
 {
     union tag *tag = link->prev->tag;
 
     if (!p) {
-        printf("null,");
+        printf("null%s", more ? "," : "");
     } else if (tag->tag_base.op == &op_pointer_type) {
         /* Print it as a string if possible. */
-        printf("\"%s\",", (char *)p);
+        printf("\"%s\"%s", (char *)p, more ? "," : "");
     } else {
-        printf("%d,", *(char *)p);
+        printf("%d%s", *(char *)p, more ? "," : "");
     }
 }
 
-#define RENDER(FUNC, TYPE, FMT)                    \
-    void FUNC(unsigned char *p, struct link *link) \
-    {                                              \
-        printf(FMT, *(TYPE *)p);                   \
+#define RENDER(FUNC, TYPE, FMT)                              \
+    void FUNC(unsigned char *p, struct link *link, int more) \
+    {                                                        \
+        printf(FMT, *(TYPE *)p, more ? "," : "");            \
     }
 
-RENDER(render_unsigned_char, unsigned char, "%d,");
-RENDER(render_short, short, "%hd,");
-RENDER(render_short_unsigned, short unsigned, "%hu,");
-RENDER(render_int, int, "%d,");
-RENDER(render_unsigned_int, unsigned int, "%u,");
-RENDER(render_long, long, "%ld,");
-RENDER(render_long_unsigned, long unsigned, "%lu,");
-RENDER(render_long_long, long long, "%lld,");
-RENDER(render_long_long_unsigned, long long unsigned, "%llu,");
-RENDER(render_float, float, "%f,");
-RENDER(render_double, double, "%lf,");
-RENDER(render_long_double, long double, "%Lf,");
+RENDER(render_unsigned_char, unsigned char, "%d%s");
+RENDER(render_short, short, "%hd%s");
+RENDER(render_short_unsigned, short unsigned, "%hu%s");
+RENDER(render_int, int, "%d%s");
+RENDER(render_unsigned_int, unsigned int, "%u%s");
+RENDER(render_long, long, "%ld%s");
+RENDER(render_long_unsigned, long unsigned, "%lu%s");
+RENDER(render_long_long, long long, "%lld%s");
+RENDER(render_long_long_unsigned, long long unsigned, "%llu%s");
+RENDER(render_float, float, "%f%s");
+RENDER(render_double, double, "%lf%s");
+RENDER(render_long_double, long double, "%Lf%s");
 
-void visit_base_type(char *name, union tag *tag, struct link *prev, unsigned char *p)
+void visit_base_type(char *name, union tag *tag, struct link *prev, unsigned char *p, int more)
 {
     struct link link = make_link(tag, prev);
     struct tag_base *tag_base = (struct tag_base *)tag;
 
     struct lookup {
         char *name;
-        void (*render)(unsigned char *p, struct link *link);
+        void (*render)(unsigned char *p, struct link *link, int more);
     };
     struct lookup lookup[] = {
         { "char", render_char },
@@ -210,7 +224,7 @@ void visit_base_type(char *name, union tag *tag, struct link *prev, unsigned cha
 
     for (unsigned int i = 0; i < sizeof(lookup) / sizeof(lookup[0]); ++i) {
         if (!strcmp(tag_base->name, lookup[i].name)) {
-            lookup[i].render(p, &link);
+            lookup[i].render(p, &link, more);
             break;
         }
     }
@@ -234,6 +248,6 @@ union tag *find(char *name)
 
 void dump(union tag *tag, char *name, void *p)
 {
-    ((struct tag_base *)tag)->op->visit(name, tag, 0, (unsigned char *)p);
+    ((struct tag_base *)tag)->op->visit(name, tag, 0, (unsigned char *)p, 0);
     printf("\n");
 }
