@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g -Wall
+CFLAGS=-g -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
 test.objdump:test.o
 	objdump --dwarf test.o > test.objdump
 parse: parse.c

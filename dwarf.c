@@ -150,17 +150,9 @@ struct op op_variable = {
     visit_variable,
 };
 
-#define RENDER(FUNC, TYPE, FMT)                    \
-    void FUNC(unsigned char *p, struct link *link) \
-    {                                              \
-        printf(FMT, *(TYPE *)p);                   \
-    }
-
 void render_char(unsigned char *p, struct link *link)
 {
     union tag *tag = link->prev->tag;
-
-    printf("/* %p %p */", tag->tag_base.op, &op_pointer_type);
 
     if (!p) {
         printf("null,");
@@ -172,7 +164,13 @@ void render_char(unsigned char *p, struct link *link)
     }
 }
 
-RENDER(render_unsigned_char, unsigned char, "%hd,");
+#define RENDER(FUNC, TYPE, FMT)                    \
+    void FUNC(unsigned char *p, struct link *link) \
+    {                                              \
+        printf(FMT, *(TYPE *)p);                   \
+    }
+
+RENDER(render_unsigned_char, unsigned char, "%d,");
 RENDER(render_short, short, "%hd,");
 RENDER(render_short_unsigned, short unsigned, "%hu,");
 RENDER(render_int, int, "%d,");
@@ -180,7 +178,7 @@ RENDER(render_unsigned_int, unsigned int, "%u,");
 RENDER(render_long, long, "%ld,");
 RENDER(render_long_unsigned, long unsigned, "%lu,");
 RENDER(render_long_long, long long, "%lld,");
-RENDER(render_long_long_unsigned, long long unsigned, "%lld,");
+RENDER(render_long_long_unsigned, long long unsigned, "%llu,");
 RENDER(render_float, float, "%f,");
 RENDER(render_double, double, "%lf,");
 RENDER(render_long_double, long double, "%Lf,");
@@ -214,7 +212,7 @@ void visit_base_type(char *name, union tag *tag, struct link *prev, unsigned cha
         { "long double", render_long_double },
     };
 
-    for (int i = 0; i < sizeof(lookup) / sizeof(lookup[0]); ++i) {
+    for (unsigned int i = 0; i < sizeof(lookup) / sizeof(lookup[0]); ++i) {
         if (!strcmp(tag_base->name, lookup[i].name)) {
             lookup[i].render(p, &link);
             break;
@@ -243,3 +241,5 @@ void dump(union tag *tag, char *name, void *p)
     ((struct tag_base *)tag)->op->visit(name, tag, 0, (unsigned char *)p);
     printf("\n");
 }
+
+void *p = printf;
