@@ -4,7 +4,7 @@ struct link {
     struct link *prev;
     struct link *next;
     union tag *tag;
-    unsigned int val;
+    int val;
     union tag *member;
 };
 
