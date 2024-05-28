@@ -2,7 +2,6 @@
 #define _DWARF_H_
 struct link {
     struct link *prev;
-    struct link *next;
     union tag *tag;
     int val;
     union tag *member;
