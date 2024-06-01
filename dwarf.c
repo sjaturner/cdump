@@ -75,7 +75,9 @@ void visit_pointer_type(char *name, union tag *tag, struct link *prev, unsigned 
     union tag *next = taglim.base + tag_pointer_type->type;
 
     if (p && *p) {
-        ((struct tag_base *)next)->op->visit(name, next, &link, *(unsigned char **)p, more);
+        printf("{\"*\":");
+        ((struct tag_base *)next)->op->visit(name, next, &link, *(unsigned char **)p, 0);
+        printf("}%s", more ? "," : "");
     } else {
         printf("null%s", more ? "," : "");
     }
