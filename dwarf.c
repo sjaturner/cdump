@@ -1,8 +1,9 @@
+#include "dwarf.h"
+
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include "dwarf.h"
 
 struct taglim *get_taglim(void) __attribute__((weak));
 struct taglim *get_taglim(void)
