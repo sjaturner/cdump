@@ -12,6 +12,6 @@ all: test
 tags:
 	ctags -R *
 clean:
-	@rm -f *.o parse tags.h test.o test.objdump core tags test
+	@rm -f *.o parse test.o test.objdump core tags test tags.c
 indent:
 	clang-format -i *.c *.h
