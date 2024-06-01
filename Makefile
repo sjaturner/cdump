@@ -3,10 +3,11 @@ CFLAGS=-g -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
 test.objdump:test.o
 	objdump --dwarf test.o > test.objdump
 parse: parse.c
-tags.h: parse test.objdump
-	./parse < test.objdump > $@
-test: dwarf.c test.c tags.h 
-	$(CC) $(CFLAGS) dwarf.c test.c -o $@
+tags.c: parse test.objdump
+	echo "#include \"dwarf.h\"" > $@
+	./parse < test.objdump >> $@
+test: dwarf.c test.c tags.c
+	$(CC) $(CFLAGS) dwarf.c test.c tags.c -o $@
 all: test
 tags:
 	ctags -R *

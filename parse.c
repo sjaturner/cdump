@@ -237,7 +237,7 @@ int main()
 {
     int trig = 0;
 
-    printf("union tag tags[]={\n");
+    printf("static union tag tags[]={\n");
 
     for (;;) {
         char line[MAX_LEN];
@@ -295,10 +295,16 @@ int main()
     flush_record();
     printf("};\n");
 
-    printf("struct taglim taglim = {\n");
+    printf("\n");
+    printf("static struct taglim taglim = {\n");
     printf("    .base=tags,\n");
     printf("    .nelem=sizeof tags/sizeof tags[0],\n");
     printf("};\n");
+    printf("\n");
+    printf("struct taglim *get_taglim(void)\n");
+    printf("{\n");
+    printf("    return &taglim;\n");
+    printf("}\n");
 
     return 0;
 }
