@@ -34,53 +34,28 @@ struct xs mxs = {
     .xe = &mi,
 };
 
-void bigger()
-{
-    int array[4] = { 1, 2, 4, 8 };
-    char *bar = "bar";
-    float pi = 3.14;
-    uint32_t ui = 23;
-
-#if 0
-    DWARF(mxs);
-    DWARF(array);
-    DWARF(bar);
-    DWARF(pi);
-    DWARF(ui);
-#endif
-}
-
-void simple()
-{
-    struct a {
-        double d;
-        short y;
-    };
-    struct a aa = { 3.14, 1 };
-    struct b {
-        struct a a;
-        int er;
-        struct a *p;
-    } bb = {
-        .a.d = 1.23,
-        .a.y = 3,
-        .er = 456,
-        .p = &aa,
-    };
-
-#if 0
-    DWARF(bb);
-#endif
-}
-
 int main()
 {
-    if (0) {
-        bigger();
-        simple();
-    }
-    union tag *tag = find("xs");
+    dump(find("xs"), "mxs", &mxs);
 
-    dump(tag, "mxs", &mxs);
+    int first = 1;
+    int second = 2;
+    struct foo {
+        int a;
+        int b;
+    } foo = {
+        .a = 11,
+        .b = 22,
+    };
+
+    struct debug {
+        typeof(second) second;
+        typeof(foo) foo;
+    } debug = {
+        .second = second,
+        .foo = foo,
+    };
+    dump(find("debug"), "debug", &debug);
+    dump(find("int"), "mi", &mi);
     return 0;
 }
