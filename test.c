@@ -38,7 +38,6 @@ int main()
 {
     dump(find("xs"), "mxs", &mxs);
 
-    int first = 1;
     int second = 2;
     struct foo {
         int a;

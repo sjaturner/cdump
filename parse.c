@@ -237,6 +237,7 @@ int main()
 {
     int trig = 0;
 
+    printf("#include \"dwarf.h\"\n");
     printf("static union tag tags[]={\n");
 
     for (;;) {
