@@ -285,6 +285,7 @@ void dump(union tag *tag, char *name, void *p)
         return;
     }
 
+    printf("{\"%s\":", name);
     ((struct tag_base *)tag)->op->visit(name, tag, 0, (unsigned char *)p, 0);
-    printf("\n");
+    printf("}\n");
 }
