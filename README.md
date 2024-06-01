@@ -71,7 +71,7 @@ any suggestions or improvements.
 I think that I'll adapt this so that I can make programs which look at
 global structures in running processes using process\_vm\_readv. The
 easiest way to use that function on a modern Linux is to prefix the
-program with "setarch -R" to sidestep the address space radomisation
+program with "setarch -R" to sidestep the address space randomisation
 (acceptable for debug). I might even try to turn this the other way
 round and provide a mechanism for modifying global state.
 
