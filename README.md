@@ -110,6 +110,7 @@ make clean parse                            # This builds the tool which parses 
 gcc -Wall -g -c tiny.c                      # Compile the tiny.c file to get an object
 objdump --dwarf tiny.o | ./parse > tags.c   # Make the tags used for debug
 gcc tiny.o dwarf.c tags.c -o tiny           # Link it all together, the target file, the code to dump data structures and the tag information.
+
 ```
 
 Now run the tiny example and pipe the output through jq, just to make it a bit simpler to read:
