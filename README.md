@@ -23,7 +23,7 @@ through the debug records - and at the same time through the memory of
 your application.
 
 Output to other formats would be nice. I'd originally intended that this
-would C initialisers for structures but that looks a bit more tricky.
+would C make initialisers for structures but that looks a bit more tricky.
 
 The machinery tries to follow pointers so I guess linked structures
 might get out of control, there's no depth stop.
@@ -36,7 +36,7 @@ do nothing.
 ## Example
 
 There's a test.c example in this directory, showing a couple of simple
-uses.
+cases.
 
 ```
 :; make clean test
